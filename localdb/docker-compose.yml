@@ -1,0 +1,18 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: dbflute-hands-on-mysql
+    ports:
+      - "43376:3306"
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    volumes:
+      - ./my-docker.cnf:/etc/mysql/conf.d/hands-on.cnf:ro
+      - mysql-data:/var/lib/mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --lower_case_table_names=1
+      - --expire_logs_days=3
+
+volumes:
+  mysql-data:

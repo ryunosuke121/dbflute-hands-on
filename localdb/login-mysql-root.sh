@@ -2,4 +2,4 @@
 
 cd `dirname $0`
 
-./mysql/bin/mysql --defaults-file=./my.cnf --user=root --default-character-set=utf8
+docker compose exec mysql mysql --user=root --default-character-set=utf8mb4

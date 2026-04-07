@@ -2,4 +2,5 @@
 
 cd `dirname $0`
 
-./mysql/bin/mysqld --defaults-file=./my.cnf
+docker compose up -d
+echo "MySQL container started on port 43376"
