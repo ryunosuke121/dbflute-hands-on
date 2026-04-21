@@ -1,7 +1,5 @@
 package org.docksidestage.handson.exercise;
 
-import java.util.stream.IntStream;
-
 import javax.annotation.Resource;
 
 import org.dbflute.cbean.result.ListResultBean;
