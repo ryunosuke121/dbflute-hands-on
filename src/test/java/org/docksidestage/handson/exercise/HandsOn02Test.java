@@ -37,7 +37,7 @@ public class HandsOn02Test extends UnitContainerTestCase {
 
         // 取得したmemberListが条件を満たしていること
         String prevMemberName = null;
-        for(Member member: memberList) {
+        for (Member member : memberList) {
             String memberName = member.getMemberName();
 
             assertTrue(memberName.charAt(0) == 'S');
@@ -51,7 +51,7 @@ public class HandsOn02Test extends UnitContainerTestCase {
     public void test_会員IDが1の会員を検索() throws Exception {
         // ## Act ##
         OptionalEntity<Member> member = memberBhv.selectEntity(cb -> {
-           cb.query().setMemberId_Equal(1);
+            cb.query().setMemberId_Equal(1);
         });
 
         // ## Assert ##
