@@ -24,8 +24,10 @@ public class HandsOn03Test extends UnitContainerTestCase {
         log(memberList);
 
         // ## Assert ##
+        // TODO itoryu assertHasAnyElement(notEmptyList); という専用メソッドがあるのでぜひ使ってください by jflute (2026/04/26)
         assertTrue(!memberList.isEmpty());
         assertTrue(memberList.stream().allMatch(member -> member.getMemberName().charAt(0) == 'S'));
+        // TODO itoryu ちょっと見栄え的に、Lambda式の中をprivateメソッドにするとか何か見た目工夫したいところ by jflute (2026/04/26)
         assertTrue(memberList.stream()
                 .allMatch(member -> member.getBirthdate().isEqual(LocalDate.of(1968, 1, 1)) || member.getBirthdate()
                         .isBefore(LocalDate.of(1968, 1, 1))));
@@ -34,6 +36,8 @@ public class HandsOn03Test extends UnitContainerTestCase {
     public void test_会員ステータスと会員セキュリティ情報も取得して会員を検索() throws Exception {
         // ## Act ##
         ListResultBean<Member> memberList = memberBhv.selectList(cb -> {
+        	// TODO itoryu 実装順序は、データの取得、絞り込み、並び替え by jflute (2026/04/26)
+        	//  => http://dbflute.seasar.org/ja/manual/function/ormapper/conditionbean/effective.html#implorder
             cb.query().addOrderBy_Birthdate_Desc();
             cb.query().addOrderBy_MemberId_Asc();
             cb.setupSelect_MemberSecurityAsOne();
@@ -42,6 +46,7 @@ public class HandsOn03Test extends UnitContainerTestCase {
         // ## Assert ##
         assertTrue(!memberList.isEmpty());
 
+        // TODO jflute 1on1にて、カージナリティのお話 (2026/04/26)
         Member prevMember = null;
         for (Member member : memberList) {
             MemberSecurity memberSecurity = member.getMemberSecurityAsOne().get();
