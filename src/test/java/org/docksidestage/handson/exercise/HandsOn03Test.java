@@ -57,6 +57,10 @@ public class HandsOn03Test extends UnitContainerTestCase {
         assertTrue(!memberList.isEmpty());
 
         // TODO jflute 1on1にて、カージナリティのお話 (2026/04/26)
+        // #1on1: まず、カージナリティという言葉の使われる箇所が二箇所あって... (2026/04/28)
+        // 1. テーブル間のカージナリティ // ここで話すのはこっち
+        // 2. カラムのカージナリティ // itoryuさんのはこっち
+        //    → カラムの値の種類が少ないと、インデックスの効果が低い (Bツリーのお話)
         Member prevMember = null;
         for (Member member : memberList) {
             MemberSecurity memberSecurity = member.getMemberSecurityAsOne().get();
