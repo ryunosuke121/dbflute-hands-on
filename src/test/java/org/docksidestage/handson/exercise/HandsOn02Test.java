@@ -49,17 +49,42 @@ public class HandsOn02Test extends UnitContainerTestCase {
             }
             prevMemberName = memberName;
         }
+        // #1on1: こんなメソッドもある。 (2026/04/28)
+        assertOrder(memberList, orderBy -> {
+        	orderBy.asc(mb -> mb.getMemberName());
+		});
     }
 
     public void test_会員IDが1の会員を検索() throws Exception {
         // ## Act ##
-        OptionalEntity<Member> member = memberBhv.selectEntity(cb -> {
+    	// #1on1: 昔のJava6版のDBFluteだと、nullを戻すメソッド (2026/04/28)
+		//Member member = memberBhv.selectEntity(cb -> {
+		//    cb.query().setMemberId_Equal(1);
+		//});
+    	// 一方で、なければ例外を投げるメソッド (これは今もある)
+		//Member member = memberBhv.selectEntityWithDeletedCheck(cb -> {
+		//	cb.query().setMemberId_Equal(1);
+		//});
+    	
+        OptionalEntity<Member> optMember = memberBhv.selectEntity(cb -> {
             cb.query().setMemberId_Equal(1);
         });
 
         // ## Assert ##
-        assertTrue(member.isPresent());
-        // TODO jflute 1on1にてDBFluteのOptionalのお話 (2026/04/26)
+        
+        assertTrue(optMember.isPresent());
+        
+        // done jflute 1on1にてDBFluteのOptionalのお話 (2026/04/26)
+        
+        // #1on1: DBFluteのOptionalだと、なかった場合はget()でもフレームワーク提供のリッチな例外メッセージ (2026/04/28)
+        //Member mondouMember = member.get(); // 問答無用get()
+        // #1on1: フレームワークのエラーメッセージ大事だよ話 (2026/04/28)
+
+        // 問答無用get()の代わり、alwaysPresent(), なかったらリッチな例外。
+        // ifPresent() と似ているが、なかったときの挙動が違う。
+        optMember.alwaysPresent(member -> {
+        	assertEquals(1, member.getMemberId());
+        });
     }
 
     public void test_生年月日がない会員を検索() throws Exception {
@@ -70,6 +95,14 @@ public class HandsOn02Test extends UnitContainerTestCase {
         });
 
         // ## Assert ##
+        // TODO itoryu 0のとき、greenになってしまう by jflute (2026/04/28)
+
+        // allMatch()のJavaDocを見ると...
+        // if the stream is empty then true is returned and the predicate is not evaluated.
         assertTrue(memberList.stream().allMatch(member -> member.getBirthdate() == null));
+
+        // ちなみに、anyMatch だと false
+        // If the stream is empty then false is returned and the predicate is not evaluated.
+        //assertTrue(memberList.stream().anyMatch(member -> member.getBirthdate() == null));
     }
 }
