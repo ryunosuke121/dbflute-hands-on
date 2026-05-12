@@ -71,15 +71,15 @@ public class HandsOn03Test extends UnitContainerTestCase {
             MemberSecurity memberSecurity = member.getMemberSecurityAsOne().get();
             assertTrue(memberSecurity != null);
             if (prevMember != null) {
-            	// TODO itoryu カラム名がbirthdateなので、birthdayじゃなくてbirthdate by jflute (2026/04/28)
+            	// TODO done itoryu カラム名がbirthdateなので、birthdayじゃなくてbirthdate by jflute (2026/04/28)
             	// この場合、どっちが合ってるとか好きとかじゃなくて、カラム名でそうなってるということは決めの問題なので、
             	// カラムに合わせましょう。
-                LocalDate memberBirthday = member.getBirthdate();
-                LocalDate prevBirthday = prevMember.getBirthdate();
-                if (memberBirthday != null && prevBirthday != null) {
+                LocalDate memberBirthdate = member.getBirthdate();
+                LocalDate prevMemberBirthdate = prevMember.getBirthdate();
+                if (memberBirthdate != null && prevMemberBirthdate != null) {
                     // 生年月日が降順であること
-                    assertTrue(memberBirthday.isBefore(prevBirthday));
-                } else if (memberBirthday == null && prevBirthday == null) {
+                    assertTrue(memberBirthdate.isBefore(prevMemberBirthdate));
+                } else if (memberBirthdate == null && prevMemberBirthdate == null) {
                     // 生年月日が設定されていないmember同士はidが昇順であること
                     assertTrue(member.getMemberId() > prevMember.getMemberId());
                 }
