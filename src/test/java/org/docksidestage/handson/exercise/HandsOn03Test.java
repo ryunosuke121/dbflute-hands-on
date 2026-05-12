@@ -24,20 +24,25 @@ public class HandsOn03Test extends UnitContainerTestCase {
         log(memberList);
 
         // ## Assert ##
-        // TODO itoryu assertHasAnyElement(notEmptyList); という専用メソッドがあるのでぜひ使ってください by jflute (2026/04/26)
-        assertTrue(!memberList.isEmpty());
+        // TODO done itoryu assertHasAnyElement(notEmptyList); という専用メソッドがあるのでぜひ使ってください by jflute (2026/04/26)
+        assertHasAnyElement(memberList);
+
         
         // #1on1: こっちのallMatch()は安全 (2026/04/28)
         assertTrue(memberList.stream().allMatch(member -> member.getMemberName().charAt(0) == 'S'));
 
-        // TODO itoryu ちょっと見栄え的に、Lambda式の中をprivateメソッドにするとか何か見た目工夫したいところ by jflute (2026/04/26)
+        // TODO done itoryu ちょっと見栄え的に、Lambda式の中をprivateメソッドにするとか何か見た目工夫したいところ by jflute (2026/04/26)
         // #1on1: 書いてる時はだーっと書くのは全然アリでぼくもそうしてます。その後、最後の仕上げで見た目を考えるフェーズがある。 (2026/04/28)
         // そして、リファクタリング機能を指に馴染ませているので、パパッと整える。
         // ここだと特に、レビューワーは isEqual or isBefore の判定の構造を見たい。
         // そのロジカルな行のノイズを減らして、できるだけロジック構造だけの行にしたい。
-        assertTrue(memberList.stream()
-                .allMatch(member -> member.getBirthdate().isEqual(LocalDate.of(1968, 1, 1)) || member.getBirthdate()
-                        .isBefore(LocalDate.of(1968, 1, 1))));
+        LocalDate baseDate = LocalDate.of(1968, 1, 1);
+        assertTrue(memberList.stream().allMatch(member -> isBornOnOrBefore(member, baseDate)));
+    }
+
+    private boolean isBornOnOrBefore(Member member, LocalDate baseDate) {
+        LocalDate birthdate = member.getBirthdate();
+        return birthdate.isEqual(baseDate) || birthdate.isBefore(baseDate);
     }
 
     // #1on1: 会員ステータスと言った場合、テーブルを指すのか？カラムを指すのか？ (2026/04/28)

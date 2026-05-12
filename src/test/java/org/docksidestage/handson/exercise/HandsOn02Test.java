@@ -99,7 +99,7 @@ public class HandsOn02Test extends UnitContainerTestCase {
 
         // ## Assert ##
         // TODO done itoryu 0のとき、greenになってしまう by jflute (2026/04/28)
-        assertTrue(!memberList.isEmpty());
+        assertHasAnyElement(memberList);
 
         // allMatch()のJavaDocを見ると...
         // if the stream is empty then true is returned and the predicate is not evaluated.
