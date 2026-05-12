@@ -24,14 +24,14 @@ public class HandsOn03Test extends UnitContainerTestCase {
         log(memberList);
 
         // ## Assert ##
-        // TODO done itoryu assertHasAnyElement(notEmptyList); という専用メソッドがあるのでぜひ使ってください by jflute (2026/04/26)
+        // done itoryu assertHasAnyElement(notEmptyList); という専用メソッドがあるのでぜひ使ってください by jflute (2026/04/26)
         assertHasAnyElement(memberList);
 
         
         // #1on1: こっちのallMatch()は安全 (2026/04/28)
         assertTrue(memberList.stream().allMatch(member -> member.getMemberName().charAt(0) == 'S'));
 
-        // TODO done itoryu ちょっと見栄え的に、Lambda式の中をprivateメソッドにするとか何か見た目工夫したいところ by jflute (2026/04/26)
+        // done itoryu ちょっと見栄え的に、Lambda式の中をprivateメソッドにするとか何か見た目工夫したいところ by jflute (2026/04/26)
         // #1on1: 書いてる時はだーっと書くのは全然アリでぼくもそうしてます。その後、最後の仕上げで見た目を考えるフェーズがある。 (2026/04/28)
         // そして、リファクタリング機能を指に馴染ませているので、パパッと整える。
         // ここだと特に、レビューワーは isEqual or isBefore の判定の構造を見たい。
@@ -64,14 +64,32 @@ public class HandsOn03Test extends UnitContainerTestCase {
         // TODO jflute 1on1にて、カージナリティのお話 (2026/04/26)
         // #1on1: まず、カージナリティという言葉の使われる箇所が二箇所あって... (2026/04/28)
         // 1. テーブル間のカージナリティ // ここで話すのはこっち
+        //    → 会員1人につき、購入はいくつ？ステータスはいくつ？セキュリティ情報はいくつ？ (2026/05/12)
+        //      購入はいくつ？ => n (複数ありえる)
+        //      ステータスはいくつ？ => 1
+        //      セキュリティは情報いくつ？ => 1
+        //      one-to-many, 1:n 1n 1:* 1*
+        //
+        //      会員 - 会員セキュリティ情報 =>  1 : 1       // 必ず存在する1
+        //      会員 - 会員退会情報 =>         1 : 0..1   // いないかもしれない1
+        //
         // 2. カラムのカージナリティ // itoryuさんのはこっち
         //    → カラムの値の種類が少ないと、インデックスの効果が低い (Bツリーのお話)
+        //
+        // #1on1: ERDのリレーションシップの記法 (2026/05/12)
+        // 3種類とかある。ハンズオンだと3本脚のやつを使っている。
+        //
+        // #1on1: ERDのお話 (2026/05/12)
+        // 現場のERD。
+        // ERDでDBを思考する話。
+        //
+        // #1on1: OSSの活動のお話 (2026/05/12)
         Member prevMember = null;
         for (Member member : memberList) {
             MemberSecurity memberSecurity = member.getMemberSecurityAsOne().get();
             assertTrue(memberSecurity != null);
             if (prevMember != null) {
-            	// TODO done itoryu カラム名がbirthdateなので、birthdayじゃなくてbirthdate by jflute (2026/04/28)
+            	// done itoryu カラム名がbirthdateなので、birthdayじゃなくてbirthdate by jflute (2026/04/28)
             	// この場合、どっちが合ってるとか好きとかじゃなくて、カラム名でそうなってるということは決めの問題なので、
             	// カラムに合わせましょう。
                 LocalDate memberBirthdate = member.getBirthdate();

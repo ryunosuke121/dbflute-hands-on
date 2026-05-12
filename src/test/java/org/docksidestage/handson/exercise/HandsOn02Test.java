@@ -8,7 +8,7 @@ import org.docksidestage.handson.dbflute.exbhv.MemberBhv;
 import org.docksidestage.handson.dbflute.exentity.Member;
 import org.docksidestage.handson.unit.UnitContainerTestCase;
 
-// TODO done itoryu 一応、ここでもJavaDocお願いします (authorだけでもいいので) by jflute (2026/04/26)
+// done itoryu 一応、ここでもJavaDocお願いします (authorだけでもいいので) by jflute (2026/04/26)
 /**
  * @author ryunosuke.ito
  */
@@ -31,7 +31,7 @@ public class HandsOn02Test extends UnitContainerTestCase {
     public void test_会員名称がSで始まる会員を取得() throws Exception {
         // ## Act ##
         ListResultBean<Member> memberList = memberBhv.selectList(cb -> {
-        	// TODO done itoryu わりと定型なので、Lambda引数名は op -> op.likePrefix() みたいでOK by jflute (2026/04/26)
+        	// done itoryu わりと定型なので、Lambda引数名は op -> op.likePrefix() みたいでOK by jflute (2026/04/26)
             cb.query().setMemberName_LikeSearch("S", op -> op.likePrefix());
             cb.query().addOrderBy_MemberName_Asc();
         });
@@ -45,7 +45,7 @@ public class HandsOn02Test extends UnitContainerTestCase {
         for (Member member : memberList) {
             String memberName = member.getMemberName();
 
-            // TODO done itoryu 些細なとこだけど、memberName.startsWith()というメソッドもある by jflute (2026/04/26)
+            // done itoryu 些細なとこだけど、memberName.startsWith()というメソッドもある by jflute (2026/04/26)
             assertTrue(memberName.startsWith("S"));
             if (prevMemberName != null) {
                 assertTrue(memberName.compareTo(prevMemberName) >= 0);
@@ -98,7 +98,7 @@ public class HandsOn02Test extends UnitContainerTestCase {
         });
 
         // ## Assert ##
-        // TODO done itoryu 0のとき、greenになってしまう by jflute (2026/04/28)
+        // done itoryu 0のとき、greenになってしまう by jflute (2026/04/28)
         assertHasAnyElement(memberList);
 
         // allMatch()のJavaDocを見ると...
