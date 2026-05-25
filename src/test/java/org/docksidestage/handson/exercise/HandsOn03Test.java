@@ -1,18 +1,26 @@
 package org.docksidestage.handson.exercise;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
 import org.dbflute.cbean.result.ListResultBean;
 import org.docksidestage.handson.dbflute.exbhv.MemberBhv;
+import org.docksidestage.handson.dbflute.exbhv.MemberSecurityBhv;
 import org.docksidestage.handson.dbflute.exentity.Member;
 import org.docksidestage.handson.dbflute.exentity.MemberSecurity;
+import org.docksidestage.handson.dbflute.exentity.MemberStatus;
 import org.docksidestage.handson.unit.UnitContainerTestCase;
 
 public class HandsOn03Test extends UnitContainerTestCase {
     @Resource
     private MemberBhv memberBhv;
+
+    @Resource
+    private MemberSecurityBhv memberSecurityBhv;
 
     public void test_会員名称がSで始まる1968年1月1日以前に生まれた会員を検索() throws Exception {
         // ## Act ##
@@ -53,9 +61,10 @@ public class HandsOn03Test extends UnitContainerTestCase {
         	// TODO itoryu 会員ステータスを取得していない by jflute (2026/04/28)
         	// TODO itoryu 実装順序は、データの取得、絞り込み、並び替え by jflute (2026/04/26)
         	//  => http://dbflute.seasar.org/ja/manual/function/ormapper/conditionbean/effective.html#implorder
+            cb.setupSelect_MemberStatus();
+            cb.setupSelect_MemberSecurityAsOne();
             cb.query().addOrderBy_Birthdate_Desc();
             cb.query().addOrderBy_MemberId_Asc();
-            cb.setupSelect_MemberSecurityAsOne();
         });
 
         // ## Assert ##
@@ -86,8 +95,12 @@ public class HandsOn03Test extends UnitContainerTestCase {
         // #1on1: OSSの活動のお話 (2026/05/12)
         Member prevMember = null;
         for (Member member : memberList) {
+            MemberStatus memberStatus = member.getMemberStatus().get();
+            assertTrue(memberStatus != null);
+
             MemberSecurity memberSecurity = member.getMemberSecurityAsOne().get();
             assertTrue(memberSecurity != null);
+
             if (prevMember != null) {
             	// done itoryu カラム名がbirthdateなので、birthdayじゃなくてbirthdate by jflute (2026/04/28)
             	// この場合、どっちが合ってるとか好きとかじゃなくて、カラム名でそうなってるということは決めの問題なので、
@@ -104,6 +117,32 @@ public class HandsOn03Test extends UnitContainerTestCase {
             }
 
             prevMember = member;
+        }
+    }
+
+    public void test_会員セキュリティ情報のリマインダ質問で2という文字が含まれている会員を検索() throws Exception {
+        // ## Act ##
+        ListResultBean<Member> memberList = memberBhv.selectList(cb -> {
+            cb.query().queryMemberSecurityAsOne().setReminderQuestion_LikeSearch("2", op -> op.likeContain());
+            cb.query().addOrderBy_Birthdate_Desc();
+            cb.query().addOrderBy_MemberId_Asc();
+        });
+
+        // ## Assert ##
+        assertTrue(!memberList.isEmpty());
+
+        List<Integer> memberIds = memberList.extractColumnList(member -> member.getMemberId());
+        ListResultBean<MemberSecurity> memberSecurities = memberSecurityBhv.selectList(cb -> {
+            cb.query().setMemberId_InScope(memberIds);
+        });
+        Map<Integer, String> memberSecurityMap = memberSecurities.stream()
+            .collect(Collectors.toMap(MemberSecurity::getMemberId, MemberSecurity::getReminderQuestion));
+
+        for(Member member: memberList) {
+            String reminderQuestion = memberSecurityMap.get(member.getMemberId());
+            assertTrue(reminderQuestion.contains("2"));
+
+            log("memberName", member.getMemberName(), "reminderQuestion",  reminderQuestion, "\n");
         }
     }
 }
