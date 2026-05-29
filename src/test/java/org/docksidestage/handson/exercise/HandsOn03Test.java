@@ -69,8 +69,8 @@ public class HandsOn03Test extends UnitContainerTestCase {
     public void test_会員ステータスと会員セキュリティ情報も取得して会員を検索() throws Exception {
         // ## Act ##
         ListResultBean<Member> memberList = memberBhv.selectList(cb -> {
-        	// TODO itoryu 会員ステータスを取得していない by jflute (2026/04/28)
-        	// TODO itoryu 実装順序は、データの取得、絞り込み、並び替え by jflute (2026/04/26)
+        	// done itoryu 会員ステータスを取得していない by jflute (2026/04/28)
+        	// done itoryu 実装順序は、データの取得、絞り込み、並び替え by jflute (2026/04/26)
         	//  => http://dbflute.seasar.org/ja/manual/function/ormapper/conditionbean/effective.html#implorder
             cb.setupSelect_MemberStatus();
             cb.setupSelect_MemberSecurityAsOne();
@@ -81,7 +81,7 @@ public class HandsOn03Test extends UnitContainerTestCase {
         // ## Assert ##
         assertTrue(!memberList.isEmpty());
 
-        // TODO jflute 1on1にて、カージナリティのお話 (2026/04/26)
+        // done jflute 1on1にて、カージナリティのお話 (2026/04/26)
         // #1on1: まず、カージナリティという言葉の使われる箇所が二箇所あって... (2026/04/28)
         // 1. テーブル間のカージナリティ // ここで話すのはこっち
         //    → 会員1人につき、購入はいくつ？ステータスはいくつ？セキュリティ情報はいくつ？ (2026/05/12)
@@ -104,8 +104,11 @@ public class HandsOn03Test extends UnitContainerTestCase {
         // ERDでDBを思考する話。
         //
         // #1on1: OSSの活動のお話 (2026/05/12)
+        // TODO ito assertOrder()を使ってソートのアサートやってみてください by jflute (2026/05/29)
         Member prevMember = null;
         for (Member member : memberList) {
+        	// TODO ito assertTrue()がdead codeになっている by jflute (2026/05/29)
+        	// #1on1: assertを書いたら、理想的にはわざと一度落としてassert自体を確認する (2026/05/29)
             MemberStatus memberStatus = member.getMemberStatus().get();
             assertTrue(memberStatus != null);
 
@@ -134,6 +137,15 @@ public class HandsOn03Test extends UnitContainerTestCase {
     public void test_会員セキュリティ情報のリマインダ質問で2という文字が含まれている会員を検索() throws Exception {
         // ## Act ##
         ListResultBean<Member> memberList = memberBhv.selectList(cb -> {
+        	// #1on1: 関連テーブルの絞り込み。joinの目的。 (2026/05/29)
+        	//  setupSelect: joinしてselect句に並べる
+        	//  query(Relationship): joinしてwhere句で使う (or order by)
+        	// joinするだけのメソッドは基本的にはない。
+        	// joinは、他の目的を満たすための手段と言えるから。
+        	// joinだけして嬉しいことは？あまりない (SQLの文法的にはjoinだけで結果を変えることができるけどオーソドックスではない)
+        	// 通常は、select句でもwhere句でもorder by句でも使わないのにjoinするかって言ったらしない。
+        	// ConditionBeanは、その目的をメソッドで指定して、手段(join)が必要ならDBFluteが自動解決する。
+        	// データの取得(select)とデータの絞り込み(where)は別物であるという考え方。
             cb.query().queryMemberSecurityAsOne().setReminderQuestion_LikeSearch("2", op -> op.likeContain());
             cb.query().addOrderBy_Birthdate_Desc();
             cb.query().addOrderBy_MemberId_Asc();
@@ -141,11 +153,30 @@ public class HandsOn03Test extends UnitContainerTestCase {
 
         // ## Assert ##
         assertTrue(!memberList.isEmpty());
+        // #1on1: n+1問題はいとりゅうさんは得意 (2026/05/29)
+        // n+1問題がなぜ起きるのか？n+1の実装の方が簡単だから。それを実感することも大事。
+        // n+1問題が起きてから対処する？ → 業務サービスの世界だと、気づきにくいn+1になりやすい。
+        // 10ミリ秒で済むところを、n+1で 357ミリ秒になるケース...気づけるか？
+        // 複数箇所で合計で2秒とかだったりすると、さらにややこしい。
+        // パフォーマンスチューニングのお仕事の昔話。
+        // LastaFluteのn+1の検知機能の紹介。
+        //
+        // // 単純な話、getであんまり検索したくない
+        // https://jflute.hatenadiary.jp/entry/20151020/stopgetselect
 
+        // #1on1: DBFlute IntroというGUIツールで、DBFluteのDB管理支援だけ提供話 (2026/05/29)
+
+        // #1on1: 外部のデータを信用しない話。引数とかもらったものをassertせずに使うのは避けよう話。 (2026/05/29)
+
+        // #1on1: extractColumnList() を見つけたの素晴らしい (2026/05/29)
+        // #1on1: ちょこっとtips: memberBhvにextractMemberIdList()ってメソッドがある (2026/05/29)
+        //  e.g. List<Integer> memberIdList = memberBhv.extractMemberIdList(memberList);
         List<Integer> memberIds = memberList.extractColumnList(member -> member.getMemberId());
         ListResultBean<MemberSecurity> memberSecurities = memberSecurityBhv.selectList(cb -> {
             cb.query().setMemberId_InScope(memberIds);
         });
+        // #1on1: ListResultBean@groupingMap()は、Aで始まる人とかBで始まる人とか、何かしらの文字列ルールでmapにするもの (2026/05/29)
+        // なのでここではちょっと使いづらいので、streamでOK
         Map<Integer, String> memberSecurityMap = memberSecurities.stream()
             .collect(Collectors.toMap(MemberSecurity::getMemberId, MemberSecurity::getReminderQuestion));
 
@@ -157,6 +188,7 @@ public class HandsOn03Test extends UnitContainerTestCase {
         }
     }
 
+    // TODO jflute 1on1ふぉろー (2026/05/29)
     public void test_会員ステータスの表示順カラムで会員を並べて検索() throws Exception {
         // ## Act ##
         ListResultBean<Member> memberList = memberBhv.selectList(cb -> {
