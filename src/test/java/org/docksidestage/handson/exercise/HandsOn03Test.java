@@ -279,6 +279,7 @@ public class HandsOn03Test extends UnitContainerTestCase {
     // #1on1: 外だしSQLの話した。Sql2Entityまでしっかりと。 (2026/06/09)
     // 現場での外だしSQLもちょっと見てみた。
 
+    // TODO jflute 次回1on1ふぉろー (2026/06/09)
     public void test_2005年10月の1日から3日までに正式会員になった会員を検索() throws Exception {
         // ## Arrange ##
         String fromDateExp = "2005/10/01";
