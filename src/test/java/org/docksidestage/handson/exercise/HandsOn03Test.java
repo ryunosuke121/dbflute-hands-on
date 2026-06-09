@@ -20,6 +20,7 @@ import org.docksidestage.handson.dbflute.exentity.Member;
 import org.docksidestage.handson.dbflute.exentity.MemberSecurity;
 import org.docksidestage.handson.dbflute.exentity.MemberStatus;
 import org.docksidestage.handson.dbflute.exentity.Product;
+import org.docksidestage.handson.dbflute.exentity.ProductCategory;
 import org.docksidestage.handson.dbflute.exentity.Purchase;
 import org.docksidestage.handson.unit.UnitContainerTestCase;
 
@@ -304,6 +305,75 @@ public class HandsOn03Test extends UnitContainerTestCase {
             LocalDate formalizedDate = member.getFormalizedDatetime().toLocalDate();
             assertTrue(formalizedDate.isAfter(fromDatetime.toLocalDate()) || formalizedDate.isEqual(fromDatetime.toLocalDate()));
             assertTrue(formalizedDate.isBefore(toDatetime.toLocalDate()) || formalizedDate.isEqual(toDatetime.toLocalDate()));
+        }
+    }
+
+    public void test_正式会員になってから一週間以内の購入を検索() throws Exception {
+        // ## Arrange ##
+        adjustPurchase_PurchaseDatetime_fromFormalizedDatetimeInWeek();
+
+        // ## Act ##
+        ListResultBean<Purchase> purchaseList = purchaseBhv.selectList(cb -> {
+            // 会員と会員ステータス、会員セキュリティ情報も取得する
+            cb.setupSelect_Member().withMemberStatus();
+            cb.setupSelect_Member().withMemberSecurityAsOne();
+            // 商品と商品ステータス、商品カテゴリ、さらに上位の商品カテゴリも取得する
+            cb.setupSelect_Product().withProductStatus();
+            cb.setupSelect_Product().withProductCategory().withProductCategorySelf();
+            // 購入日時が正式会員日時以降であること (正式会員になってから)
+            cb.columnQuery(colCB -> colCB.specify().columnPurchaseDatetime())
+                    .greaterEqual(colCB -> colCB.specify().specifyMember().columnFormalizedDatetime());
+            // 購入日時が「正式会員になった日から一週間以内」であること
+            //
+            // [分析] adjustPurchase_PurchaseDatetime_fromFormalizedDatetimeInWeek() を呼んでも結果が増えなかった
+            //   調整対象は member_id=3 Mijatovic で、正式会員日時は 2005-10-03 13:03:30。
+            //   調整メソッドは会員の最新購入日時を「正式会員日時の7日後の日の終わり(2005-10-10 23:59:59)に動かす
+            //   一方で旧実装はシンプルにop.addDay(7)しているので2005-10-10 13:03:30までとなっていた
+            //   同じ 10/10 でも13:03:30を超えてしまうため、範囲外で弾かれる。
+            //
+            // [対応] 「一週間以内」を時刻ではなく日付ベースにする。
+            //   addDay(8).truncTime() で日付の0時に丸め、lessThan(未満)で比較することで、
+            //   7日後の日いっぱい(23:59:59...)までを範囲に含められる。これで調整データが入って結果が1件増える。
+            cb.columnQuery(colCB -> colCB.specify().columnPurchaseDatetime())
+                    .lessThan(colCB -> colCB.specify().specifyMember().columnFormalizedDatetime())
+                    .convert(op -> op.addDay(8).truncTime());
+//            cb.columnQuery(colCB -> colCB.specify().columnPurchaseDatetime())
+//                    .lessThan(colCB -> colCB.specify().specifyMember().columnFormalizedDatetime())
+//                    .convert(op -> op.addDay(7));
+
+            cb.query().addOrderBy_PurchaseDatetime_Asc();
+            cb.query().addOrderBy_PurchaseId_Asc();
+        });
+
+        // ## Assert ##
+        assertHasAnyElement(purchaseList);
+        for (Purchase purchase : purchaseList) {
+            Member member = purchase.getMember().get();
+            // 会員ステータス・会員セキュリティ情報も取得できていること
+            assertNotNull(member.getMemberStatus().get());
+            assertNotNull(member.getMemberSecurityAsOne().get());
+
+            Product product = purchase.getProduct().get();
+            // 商品ステータス・商品カテゴリも取得できていること
+            assertNotNull(product.getProductStatus().get());
+            ProductCategory productCategory = product.getProductCategory().get();
+            ProductCategory parentCategory = productCategory.getProductCategorySelf().get();
+
+            log("memberName", member.getMemberName(), "formalizedDatetime", member.getFormalizedDatetime(),
+                    "purchaseDatetime", purchase.getPurchaseDatetime(), "productName", product.getProductName(),
+                    "categoryName", productCategory.getProductCategoryName(),
+                    "parentCategoryName", parentCategory.getProductCategoryName());
+
+            // 上位の商品カテゴリ名が取得できていること
+            assertNotNull(parentCategory.getProductCategoryName());
+
+            // 購入日時が正式会員になってから一週間以内であること
+            LocalDateTime purchaseDatetime = purchase.getPurchaseDatetime();
+            LocalDateTime formalizedDatetime = member.getFormalizedDatetime();
+            assertTrue(purchaseDatetime.isEqual(formalizedDatetime) || purchaseDatetime.isAfter(formalizedDatetime));
+            LocalDate purchaseDate = purchaseDatetime.toLocalDate();
+            LocalDate limitDate = formalizedDatetime.toLocalDate().plusDays(7);
+            assertTrue(purchaseDate.isEqual(limitDate) || purchaseDate.isBefore(limitDate));
         }
     }
 }
