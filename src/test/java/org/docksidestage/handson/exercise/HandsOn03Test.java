@@ -337,9 +337,9 @@ public class HandsOn03Test extends UnitContainerTestCase {
             cb.columnQuery(colCB -> colCB.specify().columnPurchaseDatetime())
                     .lessThan(colCB -> colCB.specify().specifyMember().columnFormalizedDatetime())
                     .convert(op -> op.addDay(8).truncTime());
-//            cb.columnQuery(colCB -> colCB.specify().columnPurchaseDatetime())
-//                    .lessThan(colCB -> colCB.specify().specifyMember().columnFormalizedDatetime())
-//                    .convert(op -> op.addDay(7));
+            // cb.columnQuery(colCB -> colCB.specify().columnPurchaseDatetime())
+            // .lessThan(colCB -> colCB.specify().specifyMember().columnFormalizedDatetime())
+            // .convert(op -> op.addDay(7));
 
             cb.query().addOrderBy_PurchaseDatetime_Asc();
             cb.query().addOrderBy_PurchaseId_Asc();
