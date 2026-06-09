@@ -207,6 +207,9 @@ public class HandsOn03Test extends UnitContainerTestCase {
         }
 
         // 会員が会員ステータスごとに固まって並んでいること (順序は問わない)
+        // o A A B B C C
+        // x A A B B A C C
+        // #1on1: Good, setの変数名わかりやすい (2026/06/09)
         Set<String> arrivedStatusCodes = new HashSet<>();
         String prevStatusCode = null;
         for (Member member : memberList) {
@@ -214,15 +217,24 @@ public class HandsOn03Test extends UnitContainerTestCase {
             if (!statusCode.equals(prevStatusCode)) {
                 // 新しいステータスのグループに切り替わった。既出ならばらけている
                 assertFalse(arrivedStatusCodes.contains(statusCode));
+                // TODO itoryu ifの外に出しても良いので、外に出してifをスッキリさせた方がいいかも!? by jflute (2026/06/09)
+                // いま切り替わったか？AAなのか？気にせず、とにかくループで登場したものを記録していく、というニュアンス。
+                // (あと、Setを使ってるのに、Setじゃなくても良いコードになっているところで紛らわしさが少しある)
+                // (あと、prevの更新はすでに外に出てる。だったらこっちも)
                 arrivedStatusCodes.add(statusCode);
             }
-            prevStatusCode = statusCode;
+            prevStatusCode = statusCode; // good: 1つ前のループのステータスを保持している
         }
     }
 
     public void test_生年月日が存在する会員の購入を検索() throws Exception {
         // ## Act ##
+    	// #1on1: 基点テーブルが初めてPURCHASEになった (2026/06/09)
+    	// 自然言語を正確に読み取るスキル。
+    	// 基点テーブルが定まる検索、基点テーブルが定まらない検索
+    	// https://dbflute.seasar.org/ja/manual/function/ormapper/conditionbean/cbscope.html
         ListResultBean<Purchase> purchaseList = purchaseBhv.selectList(cb -> {
+        	// #1on1: withの話。大昔昔のDBFluteのsetupSelect制限の話 (2026/06/09)
             // 会員名称・会員ステータス名称・商品名をログ出力するために取得する
             cb.setupSelect_Member().withMemberStatus();
             cb.setupSelect_Product();
@@ -231,6 +243,8 @@ public class HandsOn03Test extends UnitContainerTestCase {
             // 購入日時の降順、購入価格の降順、商品IDの昇順、会員IDの昇順
             cb.query().addOrderBy_PurchaseDatetime_Desc();
             cb.query().addOrderBy_PurchasePrice_Desc();
+            // TODO itoryu PURCHASE自身が、PRODUCT_IDとMEMBER_IDを持っているのでquery[Relation]()必要なし by jflute (2026/06/09)
+            // (無駄にjoinをしないようにするためにも: 今回はsetupSelectもしてるので結果変わらないんだけど)
             cb.query().queryProduct().addOrderBy_ProductId_Asc();
             cb.query().queryMember().addOrderBy_MemberId_Asc();
         });
@@ -262,6 +276,8 @@ public class HandsOn03Test extends UnitContainerTestCase {
             assertNotNull(member.getBirthdate());
         }
     }
+    // #1on1: 外だしSQLの話した。Sql2Entityまでしっかりと。 (2026/06/09)
+    // 現場での外だしSQLもちょっと見てみた。
 
     public void test_2005年10月の1日から3日までに正式会員になった会員を検索() throws Exception {
         // ## Arrange ##
