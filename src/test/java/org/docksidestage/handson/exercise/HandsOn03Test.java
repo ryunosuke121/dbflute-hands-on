@@ -73,7 +73,7 @@ public class HandsOn03Test extends UnitContainerTestCase {
         	// done itoryu 会員ステータスを取得していない by jflute (2026/04/28)
         	// done itoryu 実装順序は、データの取得、絞り込み、並び替え by jflute (2026/04/26)
         	//  => http://dbflute.seasar.org/ja/manual/function/ormapper/conditionbean/effective.html#implorder
-            cb.setupSelect_MemberStatus();
+            //cb.setupSelect_MemberStatus();
             cb.setupSelect_MemberSecurityAsOne();
             cb.query().addOrderBy_Birthdate_Desc();
             cb.query().addOrderBy_MemberId_Asc();
@@ -105,9 +105,11 @@ public class HandsOn03Test extends UnitContainerTestCase {
         // ERDでDBを思考する話。
         //
         // #1on1: OSSの活動のお話 (2026/05/12)
-        // TODO done ito assertOrder()を使ってソートのアサートやってみてください by jflute (2026/05/29)
+        // done ito assertOrder()を使ってソートのアサートやってみてください by jflute (2026/05/29)
         // 会員ステータスと会員セキュリティ情報が取得できていること
         for (Member member : memberList) {
+        	// TODO itoryu Optionalなので、get()した時点で例外だからassertNotNull()が意味がない by jflute (2026/06/29)
+        	// isPresent()をチェックしてあげましょう。
             assertNotNull(member.getMemberStatus().get());
             assertNotNull(member.getMemberSecurityAsOne().get());
         }
@@ -174,7 +176,7 @@ public class HandsOn03Test extends UnitContainerTestCase {
         }
     }
 
-    // TODO jflute 1on1ふぉろー (2026/05/29)
+    // done jflute 1on1ふぉろー (2026/05/29)
     public void test_会員ステータスの表示順カラムで会員を並べて検索() throws Exception {
         // ## Act ##
         ListResultBean<Member> memberList = memberBhv.selectList(cb -> {
@@ -202,7 +204,7 @@ public class HandsOn03Test extends UnitContainerTestCase {
             if (!statusCode.equals(prevStatusCode)) {
                 // 新しいステータスのグループに切り替わった。既出ならばらけている
                 assertFalse(arrivedStatusCodes.contains(statusCode));
-                // TODO done itoryu ifの外に出しても良いので、外に出してifをスッキリさせた方がいいかも!? by jflute (2026/06/09)
+                // done itoryu ifの外に出しても良いので、外に出してifをスッキリさせた方がいいかも!? by jflute (2026/06/09)
                 // いま切り替わったか？AAなのか？気にせず、とにかくループで登場したものを記録していく、というニュアンス。
                 // (あと、Setを使ってるのに、Setじゃなくても良いコードになっているところで紛らわしさが少しある)
                 // (あと、prevの更新はすでに外に出てる。だったらこっちも)
@@ -228,7 +230,7 @@ public class HandsOn03Test extends UnitContainerTestCase {
             // 購入日時の降順、購入価格の降順、商品IDの昇順、会員IDの昇順
             cb.query().addOrderBy_PurchaseDatetime_Desc();
             cb.query().addOrderBy_PurchasePrice_Desc();
-            // TODO done itoryu PURCHASE自身が、PRODUCT_IDとMEMBER_IDを持っているのでquery[Relation]()必要なし by jflute (2026/06/09)
+            // done itoryu PURCHASE自身が、PRODUCT_IDとMEMBER_IDを持っているのでquery[Relation]()必要なし by jflute (2026/06/09)
             // (無駄にjoinをしないようにするためにも: 今回はsetupSelectもしてるので結果変わらないんだけど)
             cb.query().addOrderBy_ProductId_Asc();
             cb.query().addOrderBy_MemberId_Asc();
@@ -264,7 +266,8 @@ public class HandsOn03Test extends UnitContainerTestCase {
     // #1on1: 外だしSQLの話した。Sql2Entityまでしっかりと。 (2026/06/09)
     // 現場での外だしSQLもちょっと見てみた。
 
-    // TODO jflute 次回1on1ふぉろー (2026/06/09)
+    // done jflute 次回1on1ふぉろー (2026/06/09)
+    // #1on1: 日付表現の難しさ。曖昧さ。究極確認するが一番 (2026/06/29)
     public void test_2005年10月の1日から3日までに正式会員になった会員を検索() throws Exception {
         // ## Arrange ##
         String fromDateExp = "2005/10/01";
@@ -279,6 +282,7 @@ public class HandsOn03Test extends UnitContainerTestCase {
             // 会員ステータスも取得するが、会員ステータス名称だけ取れればよい (説明や表示順は不要)
             cb.setupSelect_MemberStatus();
             cb.specify().specifyMemberStatus().columnMemberStatusName();
+            // #1on1: DateFromToのお話 (2026/06/29)
             // 2005/10/01から2005/10/03までに正式会員になった会員
             cb.query().setFormalizedDatetime_FromTo(fromDatetime, toDatetime, op -> op.compareAsDate());
             // 会員名称に "vi" を含む会員
@@ -300,8 +304,24 @@ public class HandsOn03Test extends UnitContainerTestCase {
             // 会員ステータスはコードと名称だけが取得されていること
             assertNotNull(memberStatus.getMemberStatusCode());
             assertNotNull(memberStatus.getMemberStatusName());
+            // #1on1: 取ってないカラムをgetしたときに例外が発生するO/Rマッパーはレアだと思う (2026/06/29)
+            // 例外を発生させるためには、Entityがspecifyの情報を持ってないといけない。
+            // フレームワーク提供のスーパークラスへの依存の話。歴史的な話も。
             assertException(NonSpecifiedColumnAccessException.class, () -> memberStatus.getDescription());
             assertException(NonSpecifiedColumnAccessException.class, () -> memberStatus.getDisplayOrder());
+
+            // #1on1: DBFluteを作ったきっかけ (2026/06/29)
+            // o 炎上案件ばかりてんてんと...(幸せになれるのか？どうにかしたい)
+            // o Apache Torqueをさわることになった。自動生成ツール付きO/Rマッパー。
+            // o S2Daoを紹介してもらって、2WaySQLを知った。これはいい、でも全部これはつらい。
+            // o これを合わせたらおもしろいんじゃない？って思った。
+            // o 家に帰って、Torqueを改造し始めた。何ヶ月も試しにやってみた。(興味本位)
+            // o じゃあ使ってみようって採用してもらった。
+            // o ...(色々旅があって)
+            // o 現場指向を提唱、それを気に入ってくれてる人もいる。
+            //
+            // o フレームワークには思想がある
+            // o 
 
             // 正式会員日時が指定された条件の範囲内であること
             LocalDate formalizedDate = member.getFormalizedDatetime().toLocalDate();
@@ -325,6 +345,8 @@ public class HandsOn03Test extends UnitContainerTestCase {
             // 購入日時が正式会員日時以降であること (正式会員になってから)
             cb.columnQuery(colCB -> colCB.specify().columnPurchaseDatetime())
                     .greaterEqual(colCB -> colCB.specify().specifyMember().columnFormalizedDatetime());
+            // #1on1: 一週間以内の曖昧さ (2026/06/29)
+
             // 購入日時が「正式会員になった日から一週間以内」であること
             //
             // [分析] adjustPurchase_PurchaseDatetime_fromFormalizedDatetimeInWeek() を呼んでも結果が増えなかった
