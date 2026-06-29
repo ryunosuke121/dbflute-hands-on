@@ -105,34 +105,19 @@ public class HandsOn03Test extends UnitContainerTestCase {
         // ERDでDBを思考する話。
         //
         // #1on1: OSSの活動のお話 (2026/05/12)
-        // TODO ito assertOrder()を使ってソートのアサートやってみてください by jflute (2026/05/29)
-        Member prevMember = null;
+        // TODO done ito assertOrder()を使ってソートのアサートやってみてください by jflute (2026/05/29)
+        // 会員ステータスと会員セキュリティ情報が取得できていること
         for (Member member : memberList) {
-        	// TODO ito assertTrue()がdead codeになっている by jflute (2026/05/29)
-        	// #1on1: assertを書いたら、理想的にはわざと一度落としてassert自体を確認する (2026/05/29)
-            MemberStatus memberStatus = member.getMemberStatus().get();
-            assertTrue(memberStatus != null);
-
-            MemberSecurity memberSecurity = member.getMemberSecurityAsOne().get();
-            assertTrue(memberSecurity != null);
-
-            if (prevMember != null) {
-            	// done itoryu カラム名がbirthdateなので、birthdayじゃなくてbirthdate by jflute (2026/04/28)
-            	// この場合、どっちが合ってるとか好きとかじゃなくて、カラム名でそうなってるということは決めの問題なので、
-            	// カラムに合わせましょう。
-                LocalDate memberBirthdate = member.getBirthdate();
-                LocalDate prevMemberBirthdate = prevMember.getBirthdate();
-                if (memberBirthdate != null && prevMemberBirthdate != null) {
-                    // 生年月日が降順であること
-                    assertTrue(memberBirthdate.isBefore(prevMemberBirthdate));
-                } else if (memberBirthdate == null && prevMemberBirthdate == null) {
-                    // 生年月日が設定されていないmember同士はidが昇順であること
-                    assertTrue(member.getMemberId() > prevMember.getMemberId());
-                }
-            }
-
-            prevMember = member;
+            assertNotNull(member.getMemberStatus().get());
+            assertNotNull(member.getMemberSecurityAsOne().get());
         }
+
+        // 生年月日の降順、生年月日が同じ(またはnull同士)なら会員IDの昇順で並んでいること
+        // done itoryu カラム名がbirthdateなので、birthdayじゃなくてbirthdate by jflute (2026/04/28)
+        assertOrder(memberList, orderBy -> {
+            orderBy.desc(member -> member.getBirthdate());
+            orderBy.asc(member -> member.getMemberId());
+        });
     }
 
     public void test_会員セキュリティ情報のリマインダ質問で2という文字が含まれている会員を検索() throws Exception {
@@ -217,12 +202,12 @@ public class HandsOn03Test extends UnitContainerTestCase {
             if (!statusCode.equals(prevStatusCode)) {
                 // 新しいステータスのグループに切り替わった。既出ならばらけている
                 assertFalse(arrivedStatusCodes.contains(statusCode));
-                // TODO itoryu ifの外に出しても良いので、外に出してifをスッキリさせた方がいいかも!? by jflute (2026/06/09)
+                // TODO done itoryu ifの外に出しても良いので、外に出してifをスッキリさせた方がいいかも!? by jflute (2026/06/09)
                 // いま切り替わったか？AAなのか？気にせず、とにかくループで登場したものを記録していく、というニュアンス。
                 // (あと、Setを使ってるのに、Setじゃなくても良いコードになっているところで紛らわしさが少しある)
                 // (あと、prevの更新はすでに外に出てる。だったらこっちも)
-                arrivedStatusCodes.add(statusCode);
             }
+            arrivedStatusCodes.add(statusCode);
             prevStatusCode = statusCode; // good: 1つ前のループのステータスを保持している
         }
     }
@@ -243,10 +228,10 @@ public class HandsOn03Test extends UnitContainerTestCase {
             // 購入日時の降順、購入価格の降順、商品IDの昇順、会員IDの昇順
             cb.query().addOrderBy_PurchaseDatetime_Desc();
             cb.query().addOrderBy_PurchasePrice_Desc();
-            // TODO itoryu PURCHASE自身が、PRODUCT_IDとMEMBER_IDを持っているのでquery[Relation]()必要なし by jflute (2026/06/09)
+            // TODO done itoryu PURCHASE自身が、PRODUCT_IDとMEMBER_IDを持っているのでquery[Relation]()必要なし by jflute (2026/06/09)
             // (無駄にjoinをしないようにするためにも: 今回はsetupSelectもしてるので結果変わらないんだけど)
-            cb.query().queryProduct().addOrderBy_ProductId_Asc();
-            cb.query().queryMember().addOrderBy_MemberId_Asc();
+            cb.query().addOrderBy_ProductId_Asc();
+            cb.query().addOrderBy_MemberId_Asc();
         });
 
         // ## Assert ##
