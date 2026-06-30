@@ -321,7 +321,7 @@ public class HandsOn03Test extends UnitContainerTestCase {
             // o 現場指向を提唱、それを気に入ってくれてる人もいる。
             //
             // o フレームワークには思想がある
-            // o 
+            // o まずフレームワークの機能デザインコンセプトを学ぶ
 
             // 正式会員日時が指定された条件の範囲内であること
             LocalDate formalizedDate = member.getFormalizedDatetime().toLocalDate();
