@@ -73,7 +73,7 @@ public class HandsOn03Test extends UnitContainerTestCase {
         	// done itoryu 会員ステータスを取得していない by jflute (2026/04/28)
         	// done itoryu 実装順序は、データの取得、絞り込み、並び替え by jflute (2026/04/26)
         	//  => http://dbflute.seasar.org/ja/manual/function/ormapper/conditionbean/effective.html#implorder
-            //cb.setupSelect_MemberStatus();
+            cb.setupSelect_MemberStatus();
             cb.setupSelect_MemberSecurityAsOne();
             cb.query().addOrderBy_Birthdate_Desc();
             cb.query().addOrderBy_MemberId_Asc();
